@@ -270,9 +270,7 @@ void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track) {
 			i->childModel( "bank" )->setValue( randBank );
 			i->childModel( "patch" )->setValue( randPatch );
 
-			// TODO: rename track to patch name
-			// sf2Instrument * sf2i = (sf2Instrument *) i;
-			// it->setName(sf2i->getCurrentPatchName());
+			it->setName(i->childModel("info")->property("name").toString());
 		}
 	} else {
 		if (ext == "xiz") {

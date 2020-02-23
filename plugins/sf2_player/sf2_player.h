@@ -137,6 +137,8 @@ private:
 	LcdSpinBoxModel m_bankNum;
 	LcdSpinBoxModel m_patchNum;
 
+	IntModel m_info;
+
 	FloatModel m_gain;
 
 	BoolModel m_reverbOn;

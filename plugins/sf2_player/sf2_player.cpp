@@ -319,6 +319,11 @@ AutomatableModel * sf2Instrument::childModel( const QString & _modelName )
 	{
 		return &m_patchNum;
 	}
+	else if( _modelName == "info" )
+	{
+		m_info.setProperty("name", QVariant(getCurrentPatchName()));
+		return &m_info;
+	}
 	qCritical() << "requested unknown model " << _modelName;
 	return NULL;
 }
