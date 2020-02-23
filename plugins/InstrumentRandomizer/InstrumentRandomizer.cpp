@@ -203,7 +203,8 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 	findPresets();
 }
 
-void InstrumentRandomizerView::findPresets() {
+void InstrumentRandomizerView::findPresets()
+{
 	const QString dir = ConfigManager::inst()->factoryPresetsDir();
 	// const QString dir2 = ConfigManager::inst()->userPresetsDir();
 	presets.clear();
@@ -225,15 +226,14 @@ void InstrumentRandomizerView::findPresets() {
 	totalPresets->setText(QString("Presets Found: ").append(QString::number(presetMax)));
 }
 
-QString InstrumentRandomizerView::getRandomPreset() {
-	if (presets.length() == 0) {
-		return "";
-	}
+QString InstrumentRandomizerView::getRandomPreset()
+{
 	int randNum = rand()%(presetMax-presetMin + 1) + presetMin;
-	return presets.at(randNum);
+	return (presets.length() == 0) ? "" : presets.at(randNum);
 }
 
-void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track) {
+void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track)
+{
 	const QString randomPreset(getRandomPreset());
 	
 	// printf("Preset = %s\n", randomPreset.toStdString().c_str());
@@ -258,10 +258,11 @@ void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track) {
 		if (i) {
 			i->loadFile( ConfigManager::inst()->sf2File() );
 
-			int randPatch = rand()%127;
+			int patchMaxValue = i->childModel("info")->property("patch_max_value").toInt();
+			
+			int randPatch = rand()%patchMaxValue;
 			int randBank = 0;
 
-			// Random chance to load drumset? make optional
 			if ((rand()%100) > 90) {
 				randBank = 128;
 				randPatch = 0;
@@ -270,7 +271,7 @@ void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track) {
 			i->childModel( "bank" )->setValue( randBank );
 			i->childModel( "patch" )->setValue( randPatch );
 
-			it->setName(i->childModel("info")->property("name").toString());
+			it->setName(i->childModel("info")->property("current_patch_name").toString());
 		}
 	} else {
 		if (ext == "xiz") {
@@ -321,17 +322,6 @@ void InstrumentRandomizerView::randomizeAll()
 
 void InstrumentRandomizerView::randomizeAllActive()
 {
-	// TrackContainer::TrackList tracks;
-
-	// tracks += Engine::getSong()->tracks();
-	// tracks += Engine::getBBTrackContainer()->tracks();
-
-	// for (const Track* track : tracks) {
-	// 	if (track->type() == Track::InstrumentTrack) {
-	// 		InstrumentTrack * inst = (InstrumentTrack *) track;
-	// 		if (!inst->isMuted()) randomizeInstrument(inst);
-	// 	}
-	// }
 	QList<QMdiSubWindow*> pl = gui->mainWindow()->workspace()->subWindowList( QMdiArea::StackingOrder );
 	QListIterator<QMdiSubWindow *> w( pl );
 	w.toBack();
