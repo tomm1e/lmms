@@ -37,6 +37,7 @@ SET(LMMS_PLUGIN_LIST
 	Eq
 	Flanger
 	HydrogenImport
+	InstrumentRandomizer
 	ladspa_browser
 	LadspaEffect
 	Lv2Effect
