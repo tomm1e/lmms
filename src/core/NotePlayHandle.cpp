@@ -537,6 +537,15 @@ void NotePlayHandle::processMidiTime( const MidiTime& time )
 
 void NotePlayHandle::resize( const bpm_t _new_tempo )
 {
+	if (origin() == OriginMidiInput ||
+		(origin() == OriginNoteStacking && m_parent->origin() == OriginMidiInput))
+	{
+		// Don't resize notes from MIDI input - they should continue to play
+		// until the key is released, and their large duration can cause
+		// overflows in this method.
+		return;
+	}
+
 	double completed = m_totalFramesPlayed / (double) m_frames;
 	double new_frames = m_origFrames * m_origTempo / (double) _new_tempo;
 	m_frames = (f_cnt_t)new_frames;
@@ -613,4 +622,9 @@ void NotePlayHandleManager::extend( int c )
 		s_available[++s_availableIndex] = n;
 		++n;
 	}
+}
+
+void NotePlayHandleManager::free()
+{
+	MM_FREE(s_available);
 }

@@ -19,6 +19,7 @@ SET(LMMS_SRCS
 	gui/LfoControllerDialog.cpp
 	gui/LmmsPalette.cpp
 	gui/LmmsStyle.cpp
+	gui/Lv2ViewBase.cpp
 	gui/MainApplication.cpp
 	gui/MainWindow.cpp
 	gui/MidiSetupWidget.cpp
@@ -36,6 +37,7 @@ SET(LMMS_SRCS
 
 	gui/dialogs/FileDialog.cpp
 	gui/dialogs/VersionedSaveDialog.cpp
+	gui/dialogs/ColorChooser.cpp
 
 	gui/editors/AutomationEditor.cpp
 	gui/editors/BBEditor.cpp
@@ -52,7 +54,9 @@ SET(LMMS_SRCS
 	gui/widgets/ComboBox.cpp
 	gui/widgets/ControllerRackView.cpp
 	gui/widgets/ControllerView.cpp
+	gui/widgets/Controls.cpp
 	gui/widgets/CPULoadWidget.cpp
+	gui/widgets/CustomTextKnob.cpp
 	gui/widgets/EffectRackView.cpp
 	gui/widgets/EffectView.cpp
 	gui/widgets/EnvelopeAndLfoView.cpp
@@ -71,10 +75,14 @@ SET(LMMS_SRCS
 	gui/widgets/LcdSpinBox.cpp
 	gui/widgets/LcdWidget.cpp
 	gui/widgets/LedCheckbox.cpp
+	gui/widgets/ControlLayout.cpp
+	gui/widgets/LinkedModelGroupViews.cpp
 	gui/widgets/MeterDialog.cpp
 	gui/widgets/MidiPortMenu.cpp
 	gui/widgets/NStateButton.cpp
+	gui/widgets/Oscilloscope.cpp
 	gui/widgets/PixmapButton.cpp
+	gui/widgets/PositionLine.cpp
 	gui/widgets/ProjectNotes.cpp
 	gui/widgets/RenameDialog.cpp
 	gui/widgets/Rubberband.cpp
@@ -90,7 +98,6 @@ SET(LMMS_SRCS
 	gui/widgets/ToolTip.cpp
 	gui/widgets/TrackLabelButton.cpp
 	gui/widgets/TrackRenameLineEdit.cpp
-	gui/widgets/VisualizationWidget.cpp
 	gui/widgets/StepRecorderWidget.cpp
 
 	PARENT_SCOPE

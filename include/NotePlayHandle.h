@@ -49,6 +49,9 @@ public:
 	void * m_pluginData;
 	std::unique_ptr<BasicFilters<>> m_filter;
 
+	// length of the declicking fade in
+	fpp_t m_fadeInLength;
+
 	// specifies origin of NotePlayHandle
 	enum Origins
 	{
@@ -346,6 +349,7 @@ public:
 					NotePlayHandle::Origin origin = NotePlayHandle::OriginPattern );
 	static void release( NotePlayHandle * nph );
 	static void extend( int i );
+	static void free();
 
 private:
 	static NotePlayHandle ** s_available;
