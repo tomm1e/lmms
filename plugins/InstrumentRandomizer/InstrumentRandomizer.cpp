@@ -32,23 +32,28 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QList>
 #include <QMdiArea>
 #include <QDirIterator>
 
 #include "AutomatableModel.h"
+#include "BBEditor.h"
+#include "BBTrackContainer.h"
+#include "ConfigManager.h"
+#include "EffectChain.h"
+#include "Engine.h"
+#include "FileBrowser.h"
+#include "FxMixerView.h"
+#include "gui_templates.h"
+#include "GuiApplication.h"
 #include "Instrument.h"
 #include "InstrumentTrack.h"
-#include "FileBrowser.h"
-#include "MainWindow.h"
-#include "EffectChain.h"
-#include "GuiApplication.h"
-#include "gui_templates.h"
-#include "PluginFactory.h"
-#include "ConfigManager.h"
-#include "BBTrackContainer.h"
-#include "Engine.h"
-#include "Song.h"
 #include "LedCheckbox.h"
+#include "MainWindow.h"
+#include "PluginFactory.h"
+#include "Song.h"
+#include "Track.h"
+#include "SongEditor.h"
 
 #include "embed.h"
 #include "plugin_export.h"
@@ -106,10 +111,10 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 	sizePolicy.setVerticalStretch(0);
 	sizePolicy.setHeightForWidth(this->sizePolicy().hasHeightForWidth());
 	this->setSizePolicy(sizePolicy);
-	
+
 	gridLayout = new QGridLayout(this);
 	gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-	
+
 	verticalLayout = new QVBoxLayout();
 	verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
 
@@ -159,6 +164,13 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 	cbResetPanning->setText("Reset Panning");
 	verticalLayout->addWidget(cbResetPanning);
 
+	cbSkipStandard = new LedCheckBox("", this);
+	cbSkipStandard->setObjectName(QString::fromUtf8("cbSkipStandard"));
+	cbSkipStandard->setModel(&m_SkipStandard);
+	cbSkipStandard->setChecked(true);
+	cbSkipStandard->setText("Skip Standard Bank");
+	verticalLayout->addWidget(cbSkipStandard);
+
 	buttonRandomizeActive = new QPushButton(this);
 	buttonRandomizeActive->setObjectName(QString::fromUtf8("buttonRandomizeActive"));
 	buttonRandomizeActive->setText("Randomize Active");
@@ -174,6 +186,16 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 	buttonRandomizeAllActive->setText("Randomize All Active");
 	verticalLayout->addWidget(buttonRandomizeAllActive);
 
+	buttonCleanupProject = new QPushButton(this);
+	buttonCleanupProject->setObjectName(QString::fromUtf8("buttonCleanupProject"));
+	buttonCleanupProject->setText("Remove Automation Tracks");
+	verticalLayout->addWidget(buttonCleanupProject);
+
+	buttonRenameTracks = new QPushButton(this);
+	buttonRenameTracks->setObjectName(QString::fromUtf8("buttonRenameTracks"));
+	buttonRenameTracks->setText("Rename SF2 Tracks");
+	verticalLayout->addWidget(buttonRenameTracks);
+
 	gridLayout->addLayout(verticalLayout, 0, 0, 1, 1);
 
 	connect(cbSF2, SIGNAL(clicked()), this, SLOT(findPresets()));
@@ -183,6 +205,8 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 	connect(buttonRandomizeActive, SIGNAL(clicked()), this, SLOT(randomizeActive()));
 	connect(buttonRandomizeAll, SIGNAL(clicked()), this, SLOT(randomizeAll()));
 	connect(buttonRandomizeAllActive, SIGNAL(clicked()), this, SLOT(randomizeAllActive()));
+	connect(buttonCleanupProject, SIGNAL(clicked()), this, SLOT(cleanupProject()));
+	connect(buttonRenameTracks, SIGNAL(clicked()), this, SLOT(renameTracks()));
 
 	if( parentWidget() )
 	{
@@ -197,7 +221,7 @@ InstrumentRandomizerView::InstrumentRandomizerView(ToolPlugin *_tool) : ToolPlug
 		// flags &= ~Qt::WindowMaximizeButtonHint;
 		// parentWidget()->setWindowFlags( flags );
 
-		setMinimumSize(250, 230);
+		setMinimumSize(250, 290);
 	}
 
 	findPresets();
@@ -228,14 +252,15 @@ void InstrumentRandomizerView::findPresets()
 
 QString InstrumentRandomizerView::getRandomPreset()
 {
-	int randNum = rand()%(presetMax-presetMin + 1) + presetMin;
-	return (presets.length() == 0) ? "" : presets.at(randNum);
+	int randNum = rand() % ((presetMax - presetMin) + 1) + presetMin;
+	QString randPreset = presets.value(randNum);
+	return (randPreset == NULL) ? "" : randPreset;
 }
 
 void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track)
 {
 	const QString randomPreset(getRandomPreset());
-	
+
 	// printf("Preset = %s\n", randomPreset.toStdString().c_str());
 	if (randomPreset.isEmpty() && !m_SF2.value()) {
 		printf("No variables.\n");
@@ -248,22 +273,34 @@ void InstrumentRandomizerView::randomizeInstrument(InstrumentTrack * track)
 	InstrumentTrack * it = track;
 	Instrument * i = track->instrument();
 
+	if (m_SkipStandard.value()) {
+		if (i->nodeName() == "sf2player") {
+			int bankValue = i->childModel("info")->property("bank_value").toInt();
+			if (bankValue == 128) {
+				printf("Skipping Standard Bank\n");
+				return;
+			}
+		}
+	}
+
 	if (m_ClearEffects.value()) it->audioPort()->effects()->clear();
 	if (m_ResetVolume.value()) it->setVolume(100);
-	if (m_ResetPanning.value()) it->panningModel()->reset();
+	if (m_ResetPanning.value()) it->panningModel()->setValue(0.0);
+	//if (m_ResetPitch.value()) it->pitchModel()->setValue(0.0);
 
-	int r = rand()%100;
+	int r = rand() % 100;
 	if (((r > 50) && m_SF2.value()) || (m_SF2.value() && randomPreset.isEmpty())) {
 		i = it->loadInstrument( "sf2player" );
 		if (i) {
 			i->loadFile( ConfigManager::inst()->sf2File() );
 
 			int patchMaxValue = i->childModel("info")->property("patch_max_value").toInt();
-			
+
 			int randPatch = rand()%patchMaxValue;
 			int randBank = 0;
 
-			if ((rand()%100) > 90) {
+			// chance of standard bank
+			if ((rand() % 100) > 90) {
 				randBank = 128;
 				randPatch = 0;
 			}
@@ -331,6 +368,38 @@ void InstrumentRandomizerView::randomizeAllActive()
 		if( itw != NULL && itw->isHidden() == false )
 		{
 			randomizeInstrument(itw->model());
+		}
+	}
+}
+
+void InstrumentRandomizerView::cleanupProject()
+{
+	if (gui && gui->songEditor()) {
+		QList<TrackView *> tvs = gui->songEditor()->m_editor->trackViews();
+		for (TrackView* tv : tvs) {
+			Track* track = tv->getTrack();
+			if (track->type() == Track::AutomationTrack) {
+				printf("Removing Automation Track: %s\n", track->fullDisplayName().toStdString().c_str());
+				gui->songEditor()->m_editor->deleteTrackView(tv);
+			}
+		}
+	}
+}
+
+void InstrumentRandomizerView::renameTracks()
+{
+	TrackContainer::TrackList tracks;
+
+	tracks += Engine::getSong()->tracks();
+	tracks += Engine::getBBTrackContainer()->tracks();
+
+	for (const Track* track : tracks) {
+		if (track->type() == Track::InstrumentTrack) {
+			InstrumentTrack * it = (InstrumentTrack *) track;
+			Instrument * i = it->instrument();
+			if (i->nodeName() == "sf2player") {
+				it->setName(i->childModel("info")->property("current_patch_name").toString());
+			}
 		}
 	}
 }

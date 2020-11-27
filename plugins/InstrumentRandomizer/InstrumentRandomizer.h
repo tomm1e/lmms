@@ -42,6 +42,8 @@ public:
 	QPushButton *buttonRandomizeActive;
 	QPushButton *buttonRandomizeAll;
 	QPushButton *buttonRandomizeAllActive;
+	QPushButton *buttonCleanupProject;
+	QPushButton *buttonRenameTracks;
 	QLabel *totalPresets;
 	LedCheckBox *cbSF2;
 	BoolModel m_SF2;
@@ -55,12 +57,16 @@ public:
 	BoolModel m_ResetPanning;
 	LedCheckBox *cbClearEffects;
 	BoolModel m_ClearEffects;
+	LedCheckBox *cbSkipStandard;
+	BoolModel m_SkipStandard;
 
 private slots:
 	void findPresets();
 	void randomizeActive();
 	void randomizeAll();
 	void randomizeAllActive();
+	void cleanupProject();
+	void renameTracks();
 } ;
 
 
