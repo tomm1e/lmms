@@ -28,6 +28,7 @@
 #include <QCloseEvent>
 #include <QDesktopServices>
 #include <QDomElement>
+#include <QDrag>
 #include <QFileInfo>
 #include <QMdiArea>
 #include <QMenuBar>
@@ -115,6 +116,8 @@ MainWindow::MainWindow() :
 
 	QSplitter * splitter = new QSplitter( Qt::Horizontal, w );
 	splitter->setChildrenCollapsible( false );
+
+	setAcceptDrops(true);
 
 	ConfigManager* confMgr = ConfigManager::inst();
 	bool sideBarOnRight = confMgr->value("ui", "sidebaronright").toInt();
@@ -1693,4 +1696,25 @@ void MainWindow::onSongModified()
 void MainWindow::onProjectFileNameChanged()
 {
 	this->resetWindowTitle();
+}
+
+void MainWindow::dragEnterEvent( QDragEnterEvent * event )
+{
+	if (event->mimeData()->hasFormat("text/plain"))
+		event->acceptProposedAction();
+	else
+		event->ignore();
+}
+
+void MainWindow::dropEvent( QDropEvent * event )
+{
+	QString data = event->mimeData()->text();
+	if (data.startsWith("file://")) {
+		data.remove(0, 7).chop(2);
+		Song * song = Engine::getSong();
+		if (song) {
+			ImportFilter::import(data, song);
+			song->setLoadOnLauch(false);
+		}
+	}
 }

@@ -175,6 +175,8 @@ protected:
 	void keyReleaseEvent( QKeyEvent * _ke ) override;
 	void timerEvent( QTimerEvent * _ev ) override;
 
+	void dragEnterEvent(QDragEnterEvent* event) override;
+	void dropEvent(QDropEvent* event) override;
 
 private:
 	MainWindow();
