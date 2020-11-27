@@ -325,6 +325,7 @@ AutomatableModel * sf2Instrument::childModel( const QString & _modelName )
 	{
 		m_info.setProperty("current_patch_name", QVariant(getCurrentPatchName()));
 		m_info.setProperty("patch_max_value", QVariant(m_patchNum.maxValue()));
+		m_info.setProperty("bank_value", QVariant(m_bankNum.value()));
 		return &m_info;
 	}
 	qCritical() << "requested unknown model " << _modelName;
